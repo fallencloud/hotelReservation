@@ -3,14 +3,14 @@ package service;
 import model.Customer;
 import model.IRoom;
 import model.Reservation;
-import model.Room;
-
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ReservationService {
     private static ReservationService reservationInstance;
-    private Set<Reservation> reservations = new HashSet<>();
-    private Set<Room> rooms = new HashSet<>();
+    private Map<String, Reservation> reservations = new HashMap<>();
+    private Map<String, IRoom> rooms = new HashMap<>();
 
 
     private ReservationService() {}
@@ -23,37 +23,62 @@ public class ReservationService {
         return reservationInstance;
     }
 
+    private boolean hasRoom(IRoom room) {
+        return rooms.containsKey(room.getRoomNumber());
+    }
+
+    private boolean hasReservation(IRoom room) {
+        return reservations.containsKey(room.getRoomNumber());
+    }
+
     public void addRoom(IRoom room) {
-        rooms.add((Room) room);
+        //check for room first
+        if(!hasRoom(room)) {
+            rooms.put(room.getRoomNumber(), room);
+        } else {
+            throw new IllegalArgumentException("Sorry, that room already exists");
+        }
     }
 
     public IRoom getARoom(String roomId) {
-        rooms.forEach(room -> {
-            if(room.getRoomNumber().equals(roomId)) {
-                return room;
-            }
-        });
+        if(hasRoom(rooms.get(roomId))) {
+            return rooms.get(roomId);
+        } else {
+            throw new IllegalArgumentException("Sorry, there is no room with that id");
+
+        }
     }
 
     public Reservation reserveARoom(Customer customer, IRoom room, Date checkInDate, Date checkOutDate) {
         Reservation reservation = new Reservation(customer, room, checkInDate, checkOutDate);
-        reservations.add(reservation);
-        return reservation;
+        if(!hasReservation(room)) {
+            reservations.put(room.getRoomNumber(), reservation);
+            return reservation;
+        } else {
+            throw new IllegalArgumentException("Sorry, that room is reserved.");
+        }
+    }
+
+    public Collection<IRoom> findRooms(Date checkInDate, Date checkOutDate) {
+        //find reserved rooms
+        Stream<Reservation> reservationStream = reservations.values().stream()
+                .filter(r -> r.getCheckInDate().before(checkInDate) && r.getCheckOutDate().after(checkOutDate));
+        Stream<IRoom> freeRooms = reservationStream
+                .map(r -> r.getRoom());
+        return freeRooms.collect(Collectors.toList());
+
     }
 
     public Collection<Reservation> getCustomersReservation(Customer customer) {
-        List<Reservation> customerReservation = new ArrayList<>();
+        Stream<Reservation> reservationStream = reservations.values().stream();
+        Stream<Reservation> customerReservations = reservationStream
+                .filter(r -> r.getCustomer().getEmail().equals(customer.getEmail()));
 
-        reservations.forEach(reservation -> {
-            if(reservation.getCustomer().equals(customer)) {
-                customerReservation.add(reservation);
-            }
-        });
-
-        return customerReservation;
+        return customerReservations.collect(Collectors.toList());
     }
 
     public void printAllReservations() {
-        reservations.forEach(reservation -> System.out.println(reservation);
+        reservations.values()
+                        .forEach(System.out::println);
     }
 }

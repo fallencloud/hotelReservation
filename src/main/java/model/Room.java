@@ -4,13 +4,14 @@ public class Room implements IRoom{
     private String roomNumber;
     private double price;
     private RoomType roomType;
-    //TODO: (1) Determine if isFree variable should be added
+    private boolean isFree;
 
 
     public Room(String roomNumber, double price, RoomType roomType) {
         this.roomNumber = roomNumber;
         this.price = price;
         this.roomType = roomType;
+        isFree = false;
     }
 
     @Override
@@ -39,6 +40,11 @@ public class Room implements IRoom{
 
     @Override
     public boolean isFree() {
-        return false;
+        return isFree;
+    }
+
+    public boolean isFree(boolean isFree) {
+        this.isFree = isFree;
+        return isFree;
     }
 }
