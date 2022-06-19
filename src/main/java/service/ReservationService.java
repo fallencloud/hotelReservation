@@ -81,4 +81,8 @@ public class ReservationService {
         reservations.values()
                         .forEach(System.out::println);
     }
+
+    public Collection<IRoom> getAllRooms() {
+        return rooms.values().stream().toList();
+    }
 }
